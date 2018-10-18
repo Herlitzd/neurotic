@@ -11,10 +11,7 @@ defmodule Neurotic.Application do
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
-      # Starts a worker by calling: Neurotic.Worker.start_link(arg)
-      # {Supervisor, id: Nuerotic.Supervisor},
       {Learner, []}
-      # Neurotic.Learner.
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -22,32 +19,29 @@ defmodule Neurotic.Application do
     opts = [strategy: :one_for_one, name: Neurotic.Supervisor]
     main = Supervisor.start_link(children, opts)
 
-    Task.start_link(fn ->
-      # stream = File.stream!("./test.txt", [], :line)
-      stream = File.stream!("./sonar.all-data.txt", [], :line)
-
-      data =
-        Enum.map(stream, fn row ->
-          data = String.split(row, ",")
-          expect = if List.last(data) =~ "M", do: 1, else: 0
-
-          data =
-            Enum.take(data, Enum.count(data) - 1)
-            |> Enum.map(fn x -> elem(Float.parse(x), 0) end)
-
-          %Datum{expected: expect, args: data}
-        end)
-
-      {train, eval} = Enum.shuffle(data) |> Enum.split(150)
-      Enum.each(train, fn datum -> GenServer.cast(Neurotic.Learner, {:add, datum}) end)
-      GenServer.cast(Neurotic.Learner, {:done, eval})
-      # IEx.pry()
-    end)
-    # GenServer.call(Neurotic.Learner, {:eval, eval})
-
-    # Task.
+    Task.start_link(&train_and_run/0)
 
     main
+  end
+
+  def train_and_run() do
+    stream = File.stream!("./sonar.all-data.txt", [], :line)
+
+    data =
+      Enum.map(stream, fn row ->
+        data = String.split(row, ",")
+        expect = if List.last(data) =~ "M", do: 1, else: 0
+
+        data =
+          Enum.take(data, Enum.count(data) - 1)
+          |> Enum.map(fn x -> elem(Float.parse(x), 0) end)
+
+        %Datum{expected: expect, args: data}
+      end)
+
+    {train, eval} = Enum.split(data, 150)
+    GenServer.cast(Neurotic.Learner, {:load_training_data, train})
+    GenServer.cast(Neurotic.Learner, {:verify_training, eval})
   end
 
   def init([]) do

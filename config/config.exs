@@ -10,7 +10,10 @@ use Mix.Config
 
 # You can configure your application as:
 #
-    config :neurotic, rate: 0.0001, epochs: 500
+    #.928
+    #config :neurotic, rate: 0.00001, epochs: 400
+    config :neurotic, rate: 0.001, epochs: 400
+
 #
 # and access this configuration in your application as:
 #

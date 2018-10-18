@@ -49,12 +49,12 @@ defmodule Neurotic.Nueron do
             weight + rate * error * Enum.at(datum.args, index)
           end)
 
-        {bias, weights, sum_error + error * error}
+        {bias, weights, sum_error + abs(error)}
       end)
 
-    # IO.puts("Error for epoch: #{error}")
-    # IO.puts("Weights #{inspect(weights |> Enum.map(&Float.round(&1, 3)))}")
-    # IO.puts("Bias #{inspect(bias)}")
+    IO.puts("Error for epoch: #{error}")
+    IO.puts("Weights #{inspect(weights |> Enum.map(&Float.round(&1, 3)))}")
+    IO.puts("Bias #{inspect(bias)}")
 
     {bias, weights}
   end
