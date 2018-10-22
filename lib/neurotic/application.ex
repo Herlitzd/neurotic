@@ -39,9 +39,9 @@ defmodule Neurotic.Application do
         %Datum{expected: expect, args: data}
       end)
 
-    {train, eval} = Enum.split(data, 150)
-    GenServer.cast(Neurotic.Learner, {:load_training_data, train})
-    GenServer.cast(Neurotic.Learner, {:verify_training, eval})
+    {train, eval} = Enum.split(data, 180)
+    Neurotic.Learner.load_training_data(train)
+    Neurotic.Learner.verify_training(eval)
   end
 
   def init([]) do
