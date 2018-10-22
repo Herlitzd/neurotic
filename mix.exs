@@ -7,7 +7,14 @@ defmodule Neurotic.MixProject do
       version: "0.1.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
+    ]
+  end
+  defp aliases do
+    [
+      # Avoid starting application for unit testing
+      test: "test --no-start"
     ]
   end
 

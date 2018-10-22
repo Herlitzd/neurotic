@@ -1,6 +1,6 @@
 defmodule Neurotic.Learner do
   use GenServer
-  alias Neurotic.Nueron
+  alias Neurotic.Neuron
 
   def init(arg) do
     {:ok, arg}
@@ -23,13 +23,13 @@ defmodule Neurotic.Learner do
     epochs = Application.get_env(:neurotic, :epochs, 5)
     count = Enum.count(List.first(data).args)
     start_weights = Enum.map(0..(count - 1), fn _ -> 0.0 end)
-    {:ok, pid} = GenServer.start_link(Nueron, {0, start_weights})
-    Nueron.train_epochs(pid, data, epochs)
+    {:ok, pid} = GenServer.start_link(Neuron, {0, start_weights})
+    Neuron.train_epochs(pid, data, epochs)
     {:reply, :ok, {data, pid}}
   end
 
   def handle_cast({:verify_training, test_data}, {data, pid}) do
-    out = Nueron.evaluate(pid, test_data)
+    out = Neuron.evaluate(pid, test_data)
     correct = Enum.filter(out, fn x -> x.expected == x.predicted end)
     IO.inspect(Enum.count(correct) / Enum.count(test_data))
     IO.puts("#{inspect(Enum.count(correct))} / #{inspect(Enum.count(out))}")

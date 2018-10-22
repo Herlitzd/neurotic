@@ -9,12 +9,6 @@ use Mix.Config
 # 3rd-party users, it should be done in your "mix.exs" file.
 
 # You can configure your application as:
-#
-# .928 @ 180 train
-config :neurotic, rate: 0.00001, epochs: 400
-
-# .76 @ 180 train
-# config :neurotic, rate: 0.0001, epochs: 1200
 
 #
 # and access this configuration in your application as:
@@ -32,4 +26,4 @@ config :neurotic, rate: 0.00001, epochs: 400
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
 #
-#     import_config "#{Mix.env()}.exs"
+import_config "#{Mix.env()}.exs"

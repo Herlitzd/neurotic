@@ -1,9 +1,9 @@
-defmodule Neurotic.Nueron do
+defmodule Neurotic.Neuron do
   use GenServer
   alias Neurotic.Datum
 
   def rate do
-    Application.get_env(:nuertotic, :rate, 0.01)
+    Application.get_env(:neurotic, :rate, 0.01)
   end
 
   def init({_bias, _weights} = args) do
@@ -18,24 +18,18 @@ defmodule Neurotic.Nueron do
     GenServer.call(pid, {:evaluate, data}, :infinity)
   end
 
-  def handle_call({:evaluate, data}, _from, {bias, weights} = state) do
+  def handle_call({:evaluate, data}, _from, {_bias, _weights} = state) do
     {:reply, Enum.map(data, fn datum -> activate(datum, state) end), state}
   end
 
-  import IEx
-
   def handle_call({:train_epochs, data, epochs}, _from, {_bias, _weights} = state) do
-    state =
-      Enum.reduce(0..epochs, state, fn _, acc ->
-        epoch(data, acc)
-      end)
+    state = epoch(data, epochs, state)
 
     {:reply, state, state}
   end
 
-  def epoch(data, {bias, weights} = state) do
+  def epoch(data, epochs_remaining, {bias, weights} = state) do
     rate = rate()
-    # IEx.pry()
 
     {bias, weights, error} =
       Enum.reduce(data, {bias, weights, 0.0}, fn datum, {bias, weights, sum_error} ->
@@ -52,11 +46,15 @@ defmodule Neurotic.Nueron do
         {bias, weights, sum_error + abs(error)}
       end)
 
-    # IO.puts("Error for epoch: #{error}")
-    # IO.puts("Weights #{inspect(weights |> Enum.map(&Float.round(&1, 3)))}")
-    # IO.puts("Bias #{inspect(bias)}")
+    cond do
+      error == 0 or epochs_remaining == 0 ->
+        # if zero error is achieved accross epoch, training is complete
+        # short circuit and exit
+        {bias, weights}
 
-    {bias, weights}
+      true ->
+        epoch(data, epochs_remaining - 1, {bias, weights})
+    end
   end
 
   def activate(datum, {bias, weights}) do
