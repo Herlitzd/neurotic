@@ -6,7 +6,6 @@ defmodule Neurotic.Application do
   use Application
   alias Neurotic.Learner
   alias Neurotic.Datum
-  import IEx
 
   def start(_type, _args) do
     # List all child processes to be supervised
@@ -19,7 +18,7 @@ defmodule Neurotic.Application do
     opts = [strategy: :one_for_one, name: Neurotic.Supervisor]
     main = Supervisor.start_link(children, opts)
 
-    Task.start_link(&train_and_run/0)
+    {:ok, _pid} = Task.start_link(&train_and_run/0)
 
     main
   end
