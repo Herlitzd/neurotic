@@ -5,12 +5,16 @@ defmodule Neurotic.Application do
 
   use Application
   alias Neurotic.Learner
+  alias Neurotic.LearnerSupvisor
   alias Neurotic.Datum
 
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
-      {Learner, []}
+      # {Learner, []}
+      {LearnerSupvisor, []},
+      {Registry, keys: :unique, name: Neurotic.LearnerRegistry},
+      {Registry, keys: :unique, name: Neurotic.NeuronRegistry}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -18,30 +22,32 @@ defmodule Neurotic.Application do
     opts = [strategy: :one_for_one, name: Neurotic.Supervisor]
     main = Supervisor.start_link(children, opts)
 
-    {:ok, _pid} = Task.start_link(&train_and_run/0)
+    # {:ok, pid} = LearnerSupvisor.new_learner("Learner 1")
+
+    # {:ok, _pid} = Task.start_link(&train_and_run/1(pid))
 
     main
   end
 
-  def train_and_run() do
-    stream = File.stream!("./sonar.all-data.txt", [], :line)
+  # def train_and_run(pid) do
+  #   stream = File.stream!("./sonar.all-data.txt", [], :line)
 
-    data =
-      Enum.map(stream, fn row ->
-        data = String.split(row, ",")
-        expect = if List.last(data) =~ "M", do: 1, else: 0
+  #   data =
+  #     Enum.map(stream, fn row ->
+  #       data = String.split(row, ",")
+  #       expect = if List.last(data) =~ "M", do: 1, else: 0
 
-        data =
-          Enum.take(data, Enum.count(data) - 1)
-          |> Enum.map(fn x -> elem(Float.parse(x), 0) end)
+  #       data =
+  #         Enum.take(data, Enum.count(data) - 1)
+  #         |> Enum.map(fn x -> elem(Float.parse(x), 0) end)
 
-        %Datum{expected: expect, args: data}
-      end)
+  #       %Datum{expected: expect, args: data}
+  #     end)
 
-    {train, eval} = Enum.split(data, 180)
-    Neurotic.Learner.load_training_data(train)
-    Neurotic.Learner.verify_training(eval)
-  end
+  #   {train, eval} = Enum.split(data, 180)
+  #   Neurotic.Learner.load_training_data(train)
+  #   Neurotic.Learner.verify_training(eval)
+  # end
 
   def init([]) do
     IO.puts("init")

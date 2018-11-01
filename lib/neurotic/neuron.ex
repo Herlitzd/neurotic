@@ -6,29 +6,37 @@ defmodule Neurotic.Neuron do
     Application.get_env(:neurotic, :rate, 0.01)
   end
 
-  def init({_bias, _weights} = args) do
-    {:ok, args}
+  def init(_args) do
+    {:ok, {0.0, [], nil}}
   end
 
   def train_epochs(pid, data, epochs) do
     GenServer.call(pid, {:train_epochs, data, epochs}, :infinity)
   end
 
+  def config(neuron, {_bias, _weights, _output} = state) do
+    GenServer.call(neuron, {:config, state})
+  end
+
   def evaluate(pid, data) do
     GenServer.call(pid, {:evaluate, data}, :infinity)
   end
 
-  def handle_call({:evaluate, data}, _from, {_bias, _weights} = state) do
+  def handle_call({:config, state}, _from, _state) do
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:evaluate, data}, _from, {_bias, _weights, _output} = state) do
     {:reply, Enum.map(data, fn datum -> activate(datum, state) end), state}
   end
 
-  def handle_call({:train_epochs, data, epochs}, _from, {_bias, _weights} = state) do
+  def handle_call({:train_epochs, data, epochs}, _from, {_bias, _weights, _output} = state) do
     state = epoch(data, epochs, state)
 
     {:reply, state, state}
   end
 
-  def epoch(data, epochs_remaining, {bias, weights} = state) do
+  def epoch(data, epochs_remaining, {bias, weights, output} = state) do
     rate = rate()
 
     {bias, weights, error} =
@@ -53,11 +61,11 @@ defmodule Neurotic.Neuron do
         {bias, weights}
 
       true ->
-        epoch(data, epochs_remaining - 1, {bias, weights})
+        epoch(data, epochs_remaining - 1, {bias, weights, output})
     end
   end
 
-  def activate(datum, {bias, weights}) do
+  def activate(datum, {bias, weights, _output}) do
     activation =
       Enum.with_index(weights)
       |> Enum.reduce(bias, fn {w, index}, acc ->
